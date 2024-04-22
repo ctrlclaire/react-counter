@@ -1,49 +1,66 @@
-import { useQuery } from "@tanstack/react-query";
-
-const githubRepositoriesName = ["eslint/eslint", "repo/test", "babel/babel"];
+import { useQuery } from '@tanstack/react-query';
+import React from 'react';
+import GithubCard from './GithubCard.jsx';
+import { githubRepositoriesName } from './GithubList.jsx';
+import NavBar from './NavBar.jsx';
 
 export default function GithubApi() {
-  const { data, error, isError, isPending } = useQuery({
-    queryKey: ["github"],
-    queryFn: () =>
-      Promise.all(
-        githubRepositoriesName.map((repositoryName) =>
-          fetch(`https://api.github.com/repos/${repositoryName}`)
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error("Not Found");
-              }
-              return response.json();
-            })
-            .catch((error) => ({
-              error: true,
-              message: error.message,
-              full_name: repositoryName,
-            }))
-        )
-      ),
-  });
+	const [githubIndex, setGithubIndex] = React.useState(0);
 
-  if (isPending) {
-    return <span>Loading...</span>;
-  }
+	const { data, error, isError, isPending } = useQuery({
+		queryKey: ['github'],
+		queryFn: () =>
+			Promise.all(
+				githubRepositoriesName.map((repositoryName) =>
+					fetch(`https://api.github.com/repos/${repositoryName}`)
+						.then((response) => {
+							if (!response.ok) {
+								throw new Error(`${repositoryName} Not Found`);
+							}
+							return response.json();
+						})
+						.catch((error) => ({
+							error: true,
+							message: error.message,
+							full_name: repositoryName,
+						}))
+				)
+			),
+	});
 
-  if (isError) {
-    return <span>Error: {error.message}</span>;
-  }
+	function nextGithub() {
+		if (githubIndex < githubRepositoriesName.length - 1) {
+			setGithubIndex(githubIndex + 1);
+		}
+	}
 
-  return (
-    <div>
-      {data.map((repository, index) => (
-        <div key={index}>
-          <h3>{repository.full_name}</h3>
-          <p>{repository.description}</p>
-          {repository.error && <p>Error: {repository.message}</p>}
-          {repository.stargazers_count && (
-            <p>Stars: {repository.stargazers_count}</p>
-          )}
-        </div>
-      ))}
-    </div>
-  );
+	function previousGithub() {
+		if (githubIndex > 0) {
+			setGithubIndex(githubIndex - 1);
+		}
+	}
+
+	if (isPending) {
+		return <span>Loading...</span>;
+	}
+
+	if (isError) {
+		return <span>Error: {error.message}</span>;
+	}
+
+	return (
+		<div>
+			{data[githubIndex].error ? (
+				<span>Error: {data[githubIndex].message}</span>
+			) : (
+				<GithubCard github={data[githubIndex]} />
+			)}
+			<NavBar
+				githubRepositoriesName={githubRepositoriesName}
+				githubIndex={githubIndex}
+				previousGithub={previousGithub}
+				nextGithub={nextGithub}
+			/>
+		</div>
+	);
 }

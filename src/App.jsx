@@ -1,12 +1,11 @@
-import Counter from "./components/Counter.jsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import GithubApi from './components/GithubApi.jsx';
 const queryClient = new QueryClient();
 
 export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Counter />
-    </QueryClientProvider>
-  );
+	return (
+		<QueryClientProvider client={queryClient}>
+			<GithubApi />
+		</QueryClientProvider>
+	);
 }
